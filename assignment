@@ -1,0 +1,87 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+#define MAX_VERTICES 6  // 예시에 맞게 최대 정점 수 지정
+
+typedef struct node {
+    int vertex;
+    struct node *link;
+} nodePointer;
+
+typedef struct {
+    int count;  // 진입 차수
+    nodePointer *link;  // 연결 리스트
+} hdnodes;
+
+hdnodes graph[MAX_VERTICES];
+
+// 연결 리스트에 노드 추가 함수
+void insert_adj_node(int origin, int dest) {
+    nodePointer* newNode = (nodePointer*) malloc(sizeof(nodePointer));
+    newNode->vertex = dest;
+    newNode->link = graph[origin].link;
+    graph[origin].link = newNode;
+    graph[dest].count++;
+}
+
+void topsort(hdnodes graph[], int n) {
+    int i, j, k, top = -1;
+    nodePointer *ptr;
+    
+    // 초기 진입 차수가 0인 정점을 스택에 삽입
+    for (i = 0; i < n; i++) {
+        if (graph[i].count == 0) {
+            graph[i].count = top;
+            top = i;
+        }
+    }
+
+    printf("Topological order: ");
+    for (i = 0; i < n; i++) {
+        if (top == -1) {
+            printf("\nNetwork has a cycle. Sort terminated.\n");
+            exit(1);
+        } else {
+            j = top;
+            top = graph[top].count;
+            printf("V%d ", j);
+            for (ptr = graph[j].link; ptr != NULL; ptr = ptr->link) {
+                k = ptr->vertex;
+                graph[k].count--;
+                if (graph[k].count == 0) {
+                    graph[k].count = top;
+                    top = k;
+                }
+            }
+        }
+    }
+    printf("\n");
+}
+
+int main() {
+    int n = 6;  // 정점의 개수
+
+    // 그래프 초기화
+    for (int i = 0; i < n; i++) {
+        graph[i].count = 0;
+        graph[i].link = NULL;
+    }
+
+    // 간선 정보를 이용해 그래프 생성 및 진입 차수 계산
+    // 예시: V0 -> V1, V1 -> V2, V2 -> V3, V3 -> V4, V4 -> V5 (단방향)
+    insert_adj_node(0, 1);
+    insert_adj_node(1, 2);
+    insert_adj_node(2, 3);
+    insert_adj_node(3, 4);
+    insert_adj_node(4, 5);
+
+    // 추가적으로 더 복잡한 연결을 테스트하기 위한 간선
+    insert_adj_node(0, 3);
+    insert_adj_node(1, 4);
+    insert_adj_node(2, 5);
+
+    // 위상 정렬 실행
+    topsort(graph, n);
+
+    return 0;
+}
